@@ -17,8 +17,8 @@ export class BasicStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException();
     }
-
-    const { password, ...result } = user;
+    // TODO: extract password
+    const { ...result } = user;
 
     return result;
   }

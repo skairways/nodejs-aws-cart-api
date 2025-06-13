@@ -17,7 +17,9 @@ import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
 import { CartItem } from './models';
 import { CreateOrderDto, PutCartPayload } from 'src/order/type';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Cart')
 @Controller('api/profile/cart')
 export class CartController {
   constructor(
