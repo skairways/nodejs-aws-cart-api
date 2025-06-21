@@ -12,7 +12,7 @@ export class CartItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'uuid' })
   cart_id: string;
 
   @Column({ type: 'varchar', nullable: false })

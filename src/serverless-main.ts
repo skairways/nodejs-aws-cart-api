@@ -1,0 +1,40 @@
+import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import { AppModule } from './app.module';
+import express from 'express';
+import serverless from 'serverless-http';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+async function bootstrap() {
+  const expressApp = express();
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressApp),
+  );
+
+  app.enableCors();
+
+  // ✅ Swagger setup
+  const config = new DocumentBuilder()
+    .setTitle('API')
+    .setDescription('API documentation')
+    .setVersion('1.0')
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('swagger', app, document); // Exposes at /swagger
+
+  await app.init();
+
+  return serverless(expressApp);
+}
+
+let server: any;
+
+export const handler = async (event: any, context: any) => {
+  if (!server) {
+    server = await bootstrap();
+  }
+  return server(event, context);
+};

@@ -25,7 +25,6 @@ import { UsersModule } from './users/users.module';
       database: process.env.DATABASE_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       autoLoadEntities: true,
-      synchronize: true, // Set to false in production
       ssl: {
         rejectUnauthorized: false,
       },
