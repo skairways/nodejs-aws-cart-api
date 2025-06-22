@@ -39,8 +39,7 @@ export class CartController {
   async updateUserCart(
     @Req() req: AppRequest,
     @Body() body: PutCartPayloadDto,
-  ): Promise<CartItem[]> {
-    // TODO: validate body payload...
+  ) {
     const cart = await this.cartService.updateByUserId(
       getUserIdFromRequest(req),
       body,

@@ -12,9 +12,6 @@ export class CartItem {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'uuid' })
-  cart_id: string;
-
   @Column({ type: 'varchar', nullable: false })
   product_id: string;
 

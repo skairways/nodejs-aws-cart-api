@@ -23,7 +23,9 @@ async function bootstrap() {
   const port = configService.get('APP_PORT') || 4000;
 
   app.enableCors({
-    origin: (req, callback) => callback(null, true),
+    origin: '*',
+    methods: '*',
+    allowedHeaders: '*',
   });
   app.use(helmet());
 

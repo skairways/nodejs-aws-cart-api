@@ -13,13 +13,18 @@ async function bootstrap() {
     new ExpressAdapter(expressApp),
   );
 
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    methods: '*',
+    allowedHeaders: '*',
+  });
 
   // ✅ Swagger setup
   const config = new DocumentBuilder()
     .setTitle('API')
     .setDescription('API documentation')
     .setVersion('1.0')
+    .addServer('/prod')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -33,6 +38,7 @@ async function bootstrap() {
 let server: any;
 
 export const handler = async (event: any, context: any) => {
+  console.log('MY~EVENT:', JSON.stringify(event));
   if (!server) {
     server = await bootstrap();
   }

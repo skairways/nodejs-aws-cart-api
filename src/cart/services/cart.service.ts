@@ -28,7 +28,6 @@ export class CartService {
     const timestamp = new Date();
 
     const userCart = {
-      id: v4(),
       user_id: user_id ?? v4(),
       created_at: timestamp,
       updated_at: timestamp,
@@ -42,6 +41,7 @@ export class CartService {
   }
 
   async findOrCreateByUserId(userId: string): Promise<Cart> {
+    console.log('🚀 ~ CartService ~ findOrCreateByUserId ~ userId:', userId);
     const userCart = await this.findByUserId(userId);
 
     if (userCart) {
@@ -53,7 +53,6 @@ export class CartService {
 
   async updateByUserId(userId: string, payload: PutCartPayload): Promise<Cart> {
     const userCart = await this.findOrCreateByUserId(userId);
-
     const existingItem = await this.cartItemRepository.findOne({
       where: {
         cart: { id: userCart.id },
