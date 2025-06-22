@@ -1,62 +1,88 @@
 import { Injectable } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
-import { Cart, CartStatuses } from '../models';
+import { v4 } from 'uuid';
+import { CartStatuses } from '../models';
 import { PutCartPayload } from 'src/order/type';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Cart } from '../cart.entity';
+import { Repository } from 'typeorm';
+import { CartItem } from '../cart-item.entity';
 
 @Injectable()
 export class CartService {
-  private userCarts: Record<string, Cart> = {};
+  constructor(
+    @InjectRepository(Cart)
+    private readonly cartRepository: Repository<Cart>,
+    @InjectRepository(CartItem)
+    private readonly cartItemRepository: Repository<CartItem>,
+  ) {}
 
-  findByUserId(userId: string): Cart {
-    return this.userCarts[userId];
+  async findByUserId(userId: string): Promise<Cart> {
+    if (!userId) return null;
+    return await this.cartRepository.findOne({
+      where: { user_id: userId },
+      relations: ['items'],
+    });
   }
 
-  createByUserId(user_id: string): Cart {
-    const timestamp = Date.now();
+  async createByUserId(user_id: string): Promise<Cart> {
+    const timestamp = new Date();
 
     const userCart = {
-      id: randomUUID(),
-      user_id,
+      user_id: user_id ?? v4(),
       created_at: timestamp,
       updated_at: timestamp,
       status: CartStatuses.OPEN,
       items: [],
     };
 
-    this.userCarts[user_id] = userCart;
+    const newUserCart = await this.cartRepository.create(userCart);
 
-    return userCart;
+    return await this.cartRepository.save(newUserCart);
   }
 
-  findOrCreateByUserId(userId: string): Cart {
-    const userCart = this.findByUserId(userId);
+  async findOrCreateByUserId(userId: string): Promise<Cart> {
+    console.log('🚀 ~ CartService ~ findOrCreateByUserId ~ userId:', userId);
+    const userCart = await this.findByUserId(userId);
 
     if (userCart) {
       return userCart;
     }
 
-    return this.createByUserId(userId);
+    return await this.createByUserId(userId);
   }
 
-  updateByUserId(userId: string, payload: PutCartPayload): Cart {
-    const userCart = this.findOrCreateByUserId(userId);
+  async updateByUserId(userId: string, payload: PutCartPayload): Promise<Cart> {
+    const userCart = await this.findOrCreateByUserId(userId);
+    const existingItem = await this.cartItemRepository.findOne({
+      where: {
+        cart: { id: userCart.id },
+        product_id: payload.product.id,
+      },
+      relations: ['cart'],
+    });
 
-    const index = userCart.items.findIndex(
-      ({ product }) => product.id === payload.product.id,
-    );
-
-    if (index === -1) {
-      userCart.items.push(payload);
-    } else if (payload.count === 0) {
-      userCart.items.splice(index, 1);
+    if (existingItem) {
+      existingItem.count += payload.count;
+      await this.cartItemRepository.save(existingItem);
     } else {
-      userCart.items[index] = payload;
+      const newItem = this.cartItemRepository.create({
+        product_id: payload.product.id,
+        count: payload.count,
+        cart: userCart,
+      });
+      await this.cartItemRepository.save(newItem);
     }
 
-    return userCart;
+    userCart.updated_at = new Date();
+    await this.cartRepository.save(userCart);
+
+    return this.cartRepository.findOne({
+      where: { id: userCart.id },
+      relations: ['items'],
+    });
   }
 
-  removeByUserId(userId): void {
-    this.userCarts[userId] = null;
+  async removeByUserId(userId: string): Promise<void> {
+    await this.cartRepository.delete({ user_id: userId });
   }
 }

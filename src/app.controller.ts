@@ -14,9 +14,11 @@ import {
   // JwtAuthGuard,
   BasicAuthGuard,
 } from './auth';
-import { User } from './users';
+import { User } from './users/user.entity';
 import { AppRequest } from './shared';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('App')
 @Controller()
 export class AppController {
   constructor(private authService: AuthService) {}
